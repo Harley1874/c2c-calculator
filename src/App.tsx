@@ -6,6 +6,7 @@ import { Calculator, History, RefreshCw, Trash2, TrendingUp } from 'lucide-react
 
 interface CalculationHistory {
   id: string;
+  name?: string;
   timestamp: number;
   price: number;
   amount: number;
@@ -15,7 +16,9 @@ interface CalculationHistory {
 function App() {
   const [activeTab, setActiveTab] = useState<'calculator' | 'history'>('calculator');
   const [usdtPrice, setUsdtPrice] = useState<number | null>(null);
+  const [customPrice, setCustomPrice] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
+  const [recordName, setRecordName] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<CalculationHistory[]>(() => {
     const saved = localStorage.getItem('c2c-history');
@@ -52,24 +55,33 @@ function App() {
     localStorage.setItem('c2c-history', JSON.stringify(history));
   }, [history]);
 
+  const getActivePrice = () => {
+    if (customPrice) return parseFloat(customPrice);
+    return usdtPrice || 0;
+  };
+
   const calculateValue = () => {
-    if (!usdtPrice || !amount) return 0;
-    return (parseFloat(amount) * usdtPrice).toFixed(2);
+    const price = getActivePrice();
+    if (isNaN(price) || !amount) return 0;
+    return (parseFloat(amount) * price).toFixed(2);
   };
 
   const saveHistory = () => {
-    if (!usdtPrice || !amount) return;
+    const price = getActivePrice();
+    if (isNaN(price) || price <= 0 || !amount) return;
     const val = parseFloat(amount);
     if (isNaN(val) || val <= 0) return;
 
     const newRecord: CalculationHistory = {
       id: Date.now().toString(),
+      name: recordName.trim() || undefined,
       timestamp: Date.now(),
-      price: usdtPrice,
+      price: price,
       amount: val,
-      total: parseFloat((val * usdtPrice).toFixed(2)),
+      total: parseFloat((val * price).toFixed(2)),
     };
     setHistory([newRecord, ...history]);
+    setRecordName('');
   };
 
   const clearHistory = () => {
@@ -141,15 +153,53 @@ function App() {
 
               {/* Price Card */}
               <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700">
-                <div className="text-sm text-neutral-500 mb-1">当前最优单价 (CNY)</div>
-                <div className="text-4xl font-mono font-bold text-blue-600">
-                  {usdtPrice ? `¥${usdtPrice}` : 'Loading...'}
-                </div>
-                {lastUpdated && (
-                  <div className="text-xs text-neutral-400 mt-2">
-                    更新时间: {lastUpdated.toLocaleTimeString()}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-medium text-neutral-500">当前计算单价 (CNY)</div>
+                      {customPrice ? (
+                        <span className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium">
+                          自定义
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
+                          实时汇率
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="relative group">
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-3xl md:text-4xl font-bold text-blue-600 select-none">¥</span>
+                        <Input
+                          type="number"
+                          placeholder={usdtPrice ? usdtPrice.toString() : '0.00'}
+                          value={customPrice}
+                          onChange={(e) => setCustomPrice(e.target.value)}
+                          className="text-5xl md:text-6xl font-mono font-bold text-blue-600 bg-transparent border-none shadow-none p-0 h-auto w-full max-w-[400px] focus-visible:ring-0 placeholder:text-blue-600 focus:placeholder:text-blue-600/30 transition-all"
+                        />
+                      </div>
+                      
+                      {!customPrice && (
+                        <div className="absolute -bottom-5 left-8 text-xs text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          点击输入自定义价格
+                        </div>
+                      )}
+                    </div>
+
+                    {customPrice && usdtPrice && (
+                      <div className="text-sm text-neutral-400 pl-8">
+                        (实时汇率: ¥{usdtPrice})
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {lastUpdated && (
+                    <div className="text-xs text-neutral-400 pb-2">
+                      更新时间: {lastUpdated.toLocaleTimeString()}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Calculation Form */}
@@ -172,15 +222,24 @@ function App() {
                       placeholder="预估价值"
                       value={calculateValue()}
                       disabled
-                      className="text-lg"
+                      className="text-lg bg-neutral-50 dark:bg-neutral-900"
                     />
                   </div>
                 </div>
 
-                <div className="pt-4 flex justify-end">
+                <div className="pt-4 flex flex-col md:flex-row gap-4 items-end">
+                  <div className="flex-1 w-full space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="记录名称 (可选)"
+                      value={recordName}
+                      onChange={(e) => setRecordName(e.target.value)}
+                      className=""
+                    />
+                  </div>
                   <Button
                     onClick={saveHistory}
-                    className="w-full md:w-auto bg-blue-600 hover:bg-blue-700"
+                    className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
                   >
                     保存到记录
                   </Button>
@@ -209,8 +268,9 @@ function App() {
                   <div className="p-12 text-center text-neutral-500">暂无记录</div>
                 ) : (
                   <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
-                    <div className="grid grid-cols-4 p-4 text-sm font-medium text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50">
+                    <div className="grid grid-cols-5 p-4 text-sm font-medium text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50">
                       <div>时间</div>
+                      <div>名称</div>
                       <div>单价</div>
                       <div>数量 (USDT)</div>
                       <div className="text-right">总价 (CNY)</div>
@@ -218,10 +278,13 @@ function App() {
                     {history.map((item) => (
                       <div
                         key={item.id}
-                        className="grid grid-cols-4 p-4 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors"
+                        className="grid grid-cols-5 p-4 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors items-center"
                       >
-                        <div className="text-neutral-500">
+                        <div className="text-neutral-500 text-xs">
                           {new Date(item.timestamp).toLocaleString()}
+                        </div>
+                        <div className="text-neutral-900 dark:text-neutral-100 font-medium truncate pr-2" title={item.name}>
+                          {item.name || '-'}
                         </div>
                         <div className="font-mono">¥{item.price}</div>
                         <div className="font-mono">{item.amount}</div>
