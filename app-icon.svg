@@ -1,0 +1,23 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: Soft Gradient Blue -->
+  <rect width="1024" height="1024" rx="256" fill="url(#paint0_linear)"/>
+  
+  <!-- Outer Ring: C2C Cycle -->
+  <path d="M512 180C328.7 180 180 328.7 180 512C180 695.3 328.7 844 512 844C695.3 844 844 695.3 844 512" stroke="white" stroke-width="60" stroke-linecap="round" stroke-opacity="0.2"/>
+  
+  <!-- Arrows representing Exchange -->
+  <path d="M720 380L640 300M720 380L640 460M720 380H340C317.909 380 300 397.909 300 420V512" stroke="white" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M304 644L384 724M304 644L384 564M304 644H684C706.091 644 724 626.091 724 604V512" stroke="white" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Center Symbol: Currency / Calculator Dot -->
+  <circle cx="512" cy="512" r="80" fill="#4ADE80"/>
+
+  <!-- Defs for Gradient -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+</svg>
+
