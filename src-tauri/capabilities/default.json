@@ -1,0 +1,19 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://c2c.binance.com/*" },
+        { "url": "https://p2p.binance.com/*" },
+        { "url": "https://getman.cn/mock/route/to/demo" }
+      ],
+      "deny": []
+    }
+  ]
+}
