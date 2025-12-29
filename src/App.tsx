@@ -102,7 +102,7 @@ function App() {
         <nav className="flex-1 px-4 space-y-2">
           <button
             onClick={() => setActiveTab('calculator')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               activeTab === 'calculator'
                 ? 'bg-blue-600 text-white shadow-md'
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800'
@@ -113,7 +113,7 @@ function App() {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
               activeTab === 'history'
                 ? 'bg-blue-600 text-white shadow-md'
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800'
@@ -212,7 +212,7 @@ function App() {
                       placeholder="输入 USDT 数量"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="text-lg"
+                      className="text-lg mt-2"
                     />
                   </div>
                   <div className="space-y-2">
@@ -221,13 +221,13 @@ function App() {
                       type="text"
                       placeholder="预估价值"
                       value={calculateValue()}
-                      disabled
-                      className="text-lg bg-neutral-50 dark:bg-neutral-900"
+                      className="text-lg bg-neutral-50 dark:bg-neutral-900 mt-2 text-blue-600"
+                      readOnly
                     />
                   </div>
                 </div>
 
-                <div className="pt-4 flex flex-col md:flex-row gap-4 items-end">
+                <div className="pt-2 flex flex-col md:flex-row gap-4 items-end">
                   <div className="flex-1 w-full space-y-2">
                     <Input
                       type="text"
