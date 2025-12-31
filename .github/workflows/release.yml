@@ -41,7 +41,7 @@ jobs:
         run: bun run --filter @c2c/shared build
 
       - name: Build Frontend
-        run: bun run --filter c2c-calculator build
+        run: bun run --filter c2c-calculator build:ci
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
