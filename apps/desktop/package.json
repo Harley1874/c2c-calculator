@@ -22,7 +22,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.11.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "@c2c/shared": "workspace:*"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

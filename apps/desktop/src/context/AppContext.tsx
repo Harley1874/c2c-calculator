@@ -1,15 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getC2CList } from '../lib/api';
+import { CalculationHistory } from '@c2c/shared';
 
-export interface CalculationHistory {
-  id: string;
-  name?: string;
-  timestamp: number;
-  price: number;
-  amount: number;
-  total: number;
-  isFavorite?: boolean;
-}
+export type { CalculationHistory };
 
 interface AppContextType {
   usdtPrice: number | null;
