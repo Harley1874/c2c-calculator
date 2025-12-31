@@ -134,19 +134,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const clearHistory = async () => {
+    console.log('clearHistory', isAuthenticated);
     if (!isAuthenticated) return;
-    if (confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
-      try {
-        const res = await fetch(`${API_URL}/records`, { 
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          setHistory([]);
-        }
-      } catch (error) {
-        console.error('Failed to clear history:', error);
+    
+    try {
+      const res = await fetch(`${API_URL}/records`, { 
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setHistory([]);
       }
+    } catch (error) {
+      console.error('Failed to clear history:', error);
     }
   };
 

@@ -10,6 +10,7 @@ export function LoginModal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!showLoginModal) return null;
 
@@ -22,12 +23,17 @@ export function LoginModal() {
         return;
     }
 
-    const success = isLogin 
-      ? await login({ username, password })
-      : await register({ username, password });
+    setIsLoading(true);
+    try {
+      const success = isLogin 
+        ? await login({ username, password })
+        : await register({ username, password });
 
-    if (!success) {
-      setError(isLogin ? '登录失败，请检查用户名密码' : '注册失败，可能用户已存在');
+      if (!success) {
+        setError(isLogin ? '登录失败，请检查用户名密码' : '注册失败，可能用户已存在');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +73,7 @@ export function LoginModal() {
 
           {error && <div className="text-red-500 text-sm">{error}</div>}
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+          <Button type="submit" loading={isLoading} className="w-full bg-blue-600 hover:bg-blue-700">
             {isLogin ? '登录' : '注册'}
           </Button>
         </form>

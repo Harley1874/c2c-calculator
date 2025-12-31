@@ -19,6 +19,7 @@ export default function CalculatorPage() {
 
   const [amount, setAmount] = useState<string>('');
   const [recordName, setRecordName] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Clean up timeout
   useEffect(() => {
@@ -33,16 +34,21 @@ export default function CalculatorPage() {
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
-    const success = await saveHistoryRecord(amount, recordName);
+    setIsSaving(true);
+    try {
+      const success = await saveHistoryRecord(amount, recordName);
 
-    if (success) {
-      setAmount('');
-      setRecordName('');
-      toast.success('记录已保存');
+      if (success) {
+        setAmount('');
+        setRecordName('');
+        toast.success('记录已保存');
 
-      // Focus amount input
-      const amountInput = document.getElementById('amount-input');
-      if (amountInput) amountInput.focus();
+        // Focus amount input
+        const amountInput = document.getElementById('amount-input');
+        if (amountInput) amountInput.focus();
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -57,10 +63,10 @@ export default function CalculatorPage() {
           variant="outline"
           size="sm"
           onClick={fetchData}
-          disabled={loading}
+          loading={loading}
           className="gap-2"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          {!loading && <RefreshCw className="w-4 h-4" />}
           刷新汇率
         </Button>
       </div>
@@ -160,6 +166,7 @@ export default function CalculatorPage() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Button
               type="submit"
+              loading={isSaving}
               className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
             >
               保存到记录
