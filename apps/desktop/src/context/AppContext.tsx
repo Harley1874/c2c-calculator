@@ -4,6 +4,8 @@ import { CalculationHistory } from '@c2c/shared';
 
 export type { CalculationHistory };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface AppContextType {
   usdtPrice: number | null;
   customPrice: string;
@@ -12,10 +14,10 @@ interface AppContextType {
   loading: boolean;
   lastUpdated: Date | null;
   fetchData: () => Promise<void>;
-  saveHistoryRecord: (amount: string, name: string) => boolean;
-  clearHistory: () => void;
-  deleteItem: (id: string) => void;
-  toggleFavorite: (id: string) => void;
+  saveHistoryRecord: (amount: string, name: string) => Promise<boolean>;
+  clearHistory: () => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
+  toggleFavorite: (id: string) => Promise<void>;
   getActivePrice: () => number;
 }
 
@@ -27,14 +29,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
-  const [history, setHistory] = useState<CalculationHistory[]>(() => {
-    const saved = localStorage.getItem('c2c-history');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [history, setHistory] = useState<CalculationHistory[]>([]);
+
+  // 加载历史记录
+  const fetchHistory = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/records`);
+      if (res.ok) {
+        const data = await res.json();
+        // 转换数据格式以匹配 CalculationHistory
+        const formatted: CalculationHistory[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          timestamp: new Date(item.createdAt).getTime(),
+          price: Number(item.price),
+          amount: Number(item.amount),
+          total: Number(item.total),
+          isFavorite: item.isFavorite,
+        }));
+        setHistory(formatted);
+      }
+    } catch (error) {
+      console.error('Failed to fetch history:', error);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('c2c-history', JSON.stringify(history));
-  }, [history]);
+    fetchHistory();
+  }, [fetchHistory]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -65,39 +87,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return usdtPrice || 0;
   }, [customPrice, usdtPrice]);
 
-  const saveHistoryRecord = (amountStr: string, name: string) => {
+  const saveHistoryRecord = async (amountStr: string, name: string) => {
     const price = getActivePrice();
     if (isNaN(price) || price <= 0 || !amountStr) return false;
     const val = parseFloat(amountStr);
     if (isNaN(val) || val <= 0) return false;
 
-    const newRecord: CalculationHistory = {
-      id: Date.now().toString(),
-      name: name.trim() || undefined,
-      timestamp: Date.now(),
-      price: price,
-      amount: val,
-      total: parseFloat((val * price).toFixed(2)),
-      isFavorite: false,
-    };
-    setHistory(prev => [newRecord, ...prev]);
-    return true;
+    const total = parseFloat((val * price).toFixed(2));
+
+    try {
+      const res = await fetch(`${API_URL}/records`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: val.toString(),
+          price: price.toString(),
+          total: total.toString(),
+          name: name.trim() || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        await fetchHistory(); // 重新加载列表
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to save record:', error);
+    }
+    return false;
   };
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
     if (confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
-      setHistory([]);
+      try {
+        const res = await fetch(`${API_URL}/records`, { method: 'DELETE' });
+        if (res.ok) {
+          setHistory([]);
+        }
+      } catch (error) {
+        console.error('Failed to clear history:', error);
+      }
     }
   };
 
-  const deleteItem = (id: string) => {
-    setHistory(prev => prev.filter(item => item.id !== id));
+  const deleteItem = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/records/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setHistory(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+    }
   };
 
-  const toggleFavorite = (id: string) => {
-    setHistory(prev => prev.map(item => 
-      item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-    ));
+  const toggleFavorite = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/records/${id}/favorite`, { method: 'PATCH' });
+      if (res.ok) {
+        setHistory(prev => prev.map(item => 
+          item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
   };
 
   return (
@@ -127,4 +181,3 @@ export function useApp() {
   }
   return context;
 }
-

@@ -41,7 +41,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         with:
+          projectPath: './apps/desktop/src-tauri'
           tagName: v__VERSION__ # tauri-action 会自动替换为 tauri.conf.json 中的版本号
           releaseName: 'App v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
