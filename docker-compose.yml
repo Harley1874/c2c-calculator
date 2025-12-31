@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # ==============================
+  # Database Service (MySQL)
+  # ==============================
+  db:
+    image: mysql:8.0
+    container_name: c2c_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: c2c_calculator
+      MYSQL_USER: c2c_user
+      MYSQL_PASSWORD: c2c_password
+    ports:
+      - "3306:3306" # 映射到主机，方便 Navicat 连接 (生产环境建议改为 127.0.0.1:3306 或不映射)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - c2c-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # ==============================
+  # API Service (NestJS)
+  # ==============================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: c2c_api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # 注意：这里 host 写 db，对应上面的 service name
+      DATABASE_URL: mysql://c2c_user:c2c_password@db:3306/c2c_calculator
+      JWT_SECRET: super_secret_jwt_key_please_change
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - c2c-network
+
+volumes:
+  mysql_data:
+
+networks:
+  c2c-network:
+    driver: bridge
+
