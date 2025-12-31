@@ -9,12 +9,12 @@ services:
     container_name: c2c_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: c2c_calculator
-      MYSQL_USER: c2c_user
-      MYSQL_PASSWORD: c2c_password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-c2c_calculator}
+      MYSQL_USER: ${DB_USER:-c2c_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-c2c_password}
     ports:
-      - "3306:3306" # 映射到主机，方便 Navicat 连接 (生产环境建议改为 127.0.0.1:3306 或不映射)
+      - "${DB_PORT:-3306}:3306" # 映射到主机，方便 Navicat 连接 (生产环境建议改为 127.0.0.1:3306 或不映射)
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -37,8 +37,9 @@ services:
       - "3000:3000"
     environment:
       # 注意：这里 host 写 db，对应上面的 service name
-      DATABASE_URL: mysql://c2c_user:c2c_password@db:3306/c2c_calculator
-      JWT_SECRET: super_secret_jwt_key_please_change
+      DATABASE_URL: mysql://${DB_USER:-c2c_user}:${DB_PASSWORD:-c2c_password}@db:3306/${DB_NAME:-c2c_calculator}
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_please_change}
+      PORT: 3000
     depends_on:
       db:
         condition: service_healthy
