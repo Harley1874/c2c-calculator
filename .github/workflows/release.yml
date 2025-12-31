@@ -40,6 +40,11 @@ jobs:
       - name: Build Shared Package
         run: bun run --filter @c2c/shared build
 
+      - name: Build Frontend
+        run: bun run --filter desktop build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
       - name: Build and upload
         uses: tauri-apps/tauri-action@v0
         env:
