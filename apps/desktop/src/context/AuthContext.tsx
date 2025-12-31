@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { LoginDto, RegisterDto, AuthResponse } from '@c2c/shared';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -77,16 +77,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      isAuthenticated,
-      login,
-      register,
-      logout,
-      showLoginModal,
-      setShowLoginModal
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        login,
+        register,
+        logout,
+        showLoginModal,
+        setShowLoginModal,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -99,4 +101,3 @@ export function useAuth() {
   }
   return context;
 }
-

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { RefreshCw } from 'lucide-react';
@@ -6,20 +6,20 @@ import { useApp } from '../context/AppContext';
 import { toast } from 'sonner';
 
 export default function CalculatorPage() {
-  const { 
-    usdtPrice, 
-    customPrice, 
-    setCustomPrice, 
-    loading, 
-    lastUpdated, 
-    fetchData, 
-    getActivePrice, 
-    saveHistoryRecord 
+  const {
+    usdtPrice,
+    customPrice,
+    setCustomPrice,
+    loading,
+    lastUpdated,
+    fetchData,
+    getActivePrice,
+    saveHistoryRecord,
   } = useApp();
 
   const [amount, setAmount] = useState<string>('');
   const [recordName, setRecordName] = useState<string>('');
-  
+
   // Clean up timeout
   useEffect(() => {
     // No cleanup needed anymore
@@ -34,12 +34,12 @@ export default function CalculatorPage() {
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     const success = await saveHistoryRecord(amount, recordName);
-    
+
     if (success) {
       setAmount('');
       setRecordName('');
       toast.success('记录已保存');
-      
+
       // Focus amount input
       const amountInput = document.getElementById('amount-input');
       if (amountInput) amountInput.focus();
@@ -81,7 +81,7 @@ export default function CalculatorPage() {
                 </span>
               )}
             </div>
-            
+
             <div className="relative group">
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl md:text-4xl font-bold text-blue-600 select-none">¥</span>
@@ -94,7 +94,7 @@ export default function CalculatorPage() {
                   className="text-5xl md:text-6xl font-mono font-bold text-blue-600 bg-transparent border-none shadow-none p-0 h-auto w-full max-w-[400px] focus-visible:ring-0 placeholder:text-blue-600 focus:placeholder:text-blue-600/30 transition-all"
                 />
               </div>
-              
+
               {!customPrice && (
                 <div className="absolute -bottom-5 left-8 text-xs text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   点击输入自定义价格
@@ -103,9 +103,7 @@ export default function CalculatorPage() {
             </div>
 
             {customPrice && usdtPrice && (
-              <div className="text-sm text-neutral-400 pl-8">
-                (实时汇率: ¥{usdtPrice})
-              </div>
+              <div className="text-sm text-neutral-400 pl-8">(实时汇率: ¥{usdtPrice})</div>
             )}
           </div>
 
@@ -118,7 +116,7 @@ export default function CalculatorPage() {
       </div>
 
       {/* Calculation Form */}
-      <form 
+      <form
         onSubmit={handleSave}
         className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 space-y-6"
       >
@@ -172,4 +170,3 @@ export default function CalculatorPage() {
     </div>
   );
 }
-
