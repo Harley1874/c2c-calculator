@@ -21,3 +21,21 @@ export interface C2CAdItem {
   };
 }
 
+// Auth Types
+export interface LoginDto {
+  username: string;
+  password: string;
+}
+
+export interface RegisterDto {
+  username: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: {
+    id: string;
+    username: string;
+  };
+}

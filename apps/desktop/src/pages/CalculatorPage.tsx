@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { RefreshCw, CheckCircle2 } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { toast } from 'sonner';
 
 export default function CalculatorPage() {
   const { 
@@ -18,14 +19,10 @@ export default function CalculatorPage() {
 
   const [amount, setAmount] = useState<string>('');
   const [recordName, setRecordName] = useState<string>('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const successTimeoutRef = useRef<NodeJS.Timeout>(null);
-
+  
   // Clean up timeout
   useEffect(() => {
-    return () => {
-      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
-    };
+    // No cleanup needed anymore
   }, []);
 
   const calculateValue = () => {
@@ -34,17 +31,14 @@ export default function CalculatorPage() {
     return (parseFloat(amount) * price).toFixed(2);
   };
 
-  const handleSave = (e: FormEvent) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
-    const success = saveHistoryRecord(amount, recordName);
+    const success = await saveHistoryRecord(amount, recordName);
     
     if (success) {
       setAmount('');
       setRecordName('');
-      setShowSuccess(true);
-      
-      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
-      successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 2000);
+      toast.success('记录已保存');
       
       // Focus amount input
       const amountInput = document.getElementById('amount-input');
@@ -166,12 +160,6 @@ export default function CalculatorPage() {
             />
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {showSuccess && (
-                <div className="flex items-center gap-2 text-green-600 text-sm animate-in fade-in slide-in-from-right-4">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>已保存</span>
-                </div>
-            )}
             <Button
               type="submit"
               className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 whitespace-nowrap"

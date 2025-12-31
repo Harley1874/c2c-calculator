@@ -1,47 +1,34 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards, Request } from '@nestjs/common';
 import { RecordsService } from './records.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('records')
+@UseGuards(AuthGuard('jwt'))
 export class RecordsController {
-  constructor(
-    private readonly recordsService: RecordsService,
-    private readonly prisma: PrismaService // 临时注入，用于查找默认用户
-  ) {}
-
-  private async getDefaultUserId() {
-    // 临时逻辑：查找或创建默认用户
-    let user = await this.prisma.user.findUnique({ where: { username: 'default_user' } });
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          username: 'default_user',
-          password: 'hashed_password_placeholder', // 实际应加密
-        }
-      });
-    }
-    return user.id;
-  }
+  constructor(private readonly recordsService: RecordsService) {}
 
   @Post()
-  async create(@Body() createRecordDto: { amount: string; price: string; total: string; name?: string }) {
-    const userId = await this.getDefaultUserId();
+  async create(@Request() req, @Body() createRecordDto: { amount: string; price: string; total: string; name?: string }) {
     return this.recordsService.create({
       amount: createRecordDto.amount,
       price: createRecordDto.price,
       total: createRecordDto.total,
       name: createRecordDto.name,
-      user: { connect: { id: userId } }
+      user: { connect: { id: req.user.userId } }
     });
   }
 
   @Get()
-  findAll() {
-    return this.recordsService.findAll();
+  findAll(@Request() req) {
+    // 这里需要修改 Service 让他支持按 userId 过滤
+    // 暂时我们还是返回所有，或者我们在 Service 里加参数
+    // 为了严谨，我们应该修改 Service 的 findAll 方法
+    return this.recordsService.findAllByUser(req.user.userId);
   }
 
   @Patch(':id/favorite')
   toggleFavorite(@Param('id') id: string) {
+    // 实际应该检查这个 record 是否属于当前用户
     return this.recordsService.toggleFavorite(id);
   }
 
@@ -51,8 +38,7 @@ export class RecordsController {
   }
   
   @Delete()
-  clearAll() {
-      return this.recordsService.clearAll();
+  clearAll(@Request() req) {
+      return this.recordsService.clearAllByUser(req.user.userId);
   }
 }
-

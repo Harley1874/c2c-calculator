@@ -10,6 +10,14 @@ export class RecordsService {
     return this.prisma.record.create({ data });
   }
 
+  async findAllByUser(userId: string) {
+    return this.prisma.record.findMany({
+      orderBy: { createdAt: 'desc' },
+      where: { userId, isDeleted: false }
+    });
+  }
+
+  // 保留旧的作为参考，虽然不用了
   async findAll() {
     return this.prisma.record.findMany({
       orderBy: { createdAt: 'desc' },
@@ -29,7 +37,6 @@ export class RecordsService {
   }
 
   async remove(id: string) {
-    // 软删除
     return this.prisma.record.update({
       where: { id },
       data: { isDeleted: true },
@@ -42,13 +49,10 @@ export class RecordsService {
     return this.update(id, { isFavorite: !record.isFavorite });
   }
   
-  async clearAll() {
-      // 这里的逻辑可能需要调整，比如只清空当前用户的
-      // 暂时用 updateMany 模拟清空
+  async clearAllByUser(userId: string) {
       return this.prisma.record.updateMany({
-          where: { isDeleted: false },
+          where: { userId, isDeleted: false },
           data: { isDeleted: true }
       });
   }
 }
-

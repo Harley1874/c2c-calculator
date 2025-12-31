@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getC2CList } from '../lib/api';
 import { CalculationHistory } from '@c2c/shared';
+import { useAuth } from './AuthContext';
 
 export type { CalculationHistory };
 
@@ -24,6 +25,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { token, isAuthenticated, setShowLoginModal } = useAuth();
   const [usdtPrice, setUsdtPrice] = useState<number | null>(null);
   const [customPrice, setCustomPrice] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -31,13 +33,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   
   const [history, setHistory] = useState<CalculationHistory[]>([]);
 
-  // 加载历史记录
+  // 加载历史记录 (仅当已登录)
   const fetchHistory = useCallback(async () => {
+    if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/records`);
+      const res = await fetch(`${API_URL}/records`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) {
         const data = await res.json();
-        // 转换数据格式以匹配 CalculationHistory
         const formatted: CalculationHistory[] = data.map((item: any) => ({
           id: item.id,
           name: item.name,
@@ -52,11 +56,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch history:', error);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    if (isAuthenticated) {
+        fetchHistory();
+    } else {
+        setHistory([]); // 登出清空
+    }
+  }, [isAuthenticated, fetchHistory]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -88,6 +96,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [customPrice, usdtPrice]);
 
   const saveHistoryRecord = async (amountStr: string, name: string) => {
+    if (!isAuthenticated) {
+        setShowLoginModal(true);
+        return false;
+    }
+
     const price = getActivePrice();
     if (isNaN(price) || price <= 0 || !amountStr) return false;
     const val = parseFloat(amountStr);
@@ -98,7 +111,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(`${API_URL}/records`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           amount: val.toString(),
           price: price.toString(),
@@ -108,7 +124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       if (res.ok) {
-        await fetchHistory(); // 重新加载列表
+        await fetchHistory();
         return true;
       }
     } catch (error) {
@@ -118,9 +134,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const clearHistory = async () => {
+    if (!isAuthenticated) return;
     if (confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
       try {
-        const res = await fetch(`${API_URL}/records`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}/records`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (res.ok) {
           setHistory([]);
         }
@@ -131,8 +151,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteItem = async (id: string) => {
+    if (!isAuthenticated) return;
     try {
-      const res = await fetch(`${API_URL}/records/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/records/${id}`, { 
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) {
         setHistory(prev => prev.filter(item => item.id !== id));
       }
@@ -142,8 +166,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleFavorite = async (id: string) => {
+    if (!isAuthenticated) return;
     try {
-      const res = await fetch(`${API_URL}/records/${id}/favorite`, { method: 'PATCH' });
+      const res = await fetch(`${API_URL}/records/${id}/favorite`, { 
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) {
         setHistory(prev => prev.map(item => 
           item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
