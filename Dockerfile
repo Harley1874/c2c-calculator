@@ -66,5 +66,5 @@ EXPOSE 3000
 # 4. 启动命令
 # 启动前运行 migrate deploy 确保数据库结构最新
 # 由于 Monorepo 编译可能导致目录结构嵌套，我们尝试查找 main.js
-CMD ["sh", "-c", "cd apps/api && bunx prisma migrate deploy && MAIN_FILE=$(find dist -name main.js | head -n 1) && echo \"Found main file at: $MAIN_FILE\" && node $MAIN_FILE"]
+CMD ["sh", "-c", "cd apps/api && bunx prisma migrate deploy && node dist/main.js"]
 
