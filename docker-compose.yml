@@ -7,6 +7,8 @@ services:
   db:
     image: mysql:8.0
     container_name: c2c_mysql
+    env_file:
+      - .env
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
@@ -20,8 +22,8 @@ services:
     networks:
       - c2c-network
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD"]
-      interval: 5s
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$MYSQL_ROOT_PASSWORD\""]
+      interval: 10s
       timeout: 3s
       retries: 10
       start_period: 30s
