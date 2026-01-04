@@ -1,12 +1,12 @@
 import { Button } from '../components/ui/button';
-import { Trash2, Star } from 'lucide-react';
+import { Trash2, Star, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { cn } from '@/lib/utils';
 
 export default function HistoryPage() {
-  const { history, clearHistory, deleteItem, toggleFavorite } = useApp();
+  const { history, clearHistory, deleteItem, toggleFavorite, historyLoading } = useApp();
   const [isClearing, setIsClearing] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -54,7 +54,12 @@ export default function HistoryPage() {
       </div>
 
       <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-        {history.length === 0 ? (
+        {historyLoading ? (
+          <div className="p-12 flex justify-center items-center text-neutral-500">
+            <Loader2 className="w-6 h-6 animate-spin mr-2" />
+            <span>加载中...</span>
+          </div>
+        ) : history.length === 0 ? (
           <div className="p-12 text-center text-neutral-500">暂无记录</div>
         ) : (
           <div className="divide-y divide-neutral-200 dark:divide-neutral-700">

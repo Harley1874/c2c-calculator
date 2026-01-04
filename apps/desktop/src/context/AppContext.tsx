@@ -12,6 +12,7 @@ interface AppContextType {
   setCustomPrice: (price: string) => void;
   history: CalculationHistory[];
   loading: boolean;
+  historyLoading: boolean;
   lastUpdated: Date | null;
   fetchData: () => Promise<void>;
   saveHistoryRecord: (amount: string, name: string) => Promise<boolean>;
@@ -28,6 +29,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [usdtPrice, setUsdtPrice] = useState<number | null>(null);
   const [customPrice, setCustomPrice] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
   const [history, setHistory] = useState<CalculationHistory[]>([]);
@@ -35,6 +37,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // 加载历史记录 (仅当已登录)
   const fetchHistory = useCallback(async () => {
     if (!token) return;
+    setHistoryLoading(true);
     try {
       const data = await request<any[]>('/records');
       const formatted: CalculationHistory[] = data.map((item: any) => ({
@@ -49,6 +52,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHistory(formatted);
     } catch (error) {
       console.error('Failed to fetch history:', error);
+    } finally {
+      setHistoryLoading(false);
     }
   }, [token]);
 
@@ -162,6 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCustomPrice,
       history,
       loading,
+      historyLoading,
       lastUpdated,
       fetchData,
       saveHistoryRecord,
