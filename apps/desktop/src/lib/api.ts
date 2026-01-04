@@ -61,6 +61,18 @@ export const getServerPrice = async (): Promise<{ price: number, updatedAt: stri
   return request<{ price: number, updatedAt: string }>('/c2c/price?asset=USDT&fiat=CNY&tradeType=SELL');
 };
 
+export const reportPrice = async (price: number): Promise<{ price: number, updatedAt: string }> => {
+  return request<{ price: number, updatedAt: string }>('/c2c/report', {
+    method: 'POST',
+    body: JSON.stringify({
+      asset: 'USDT',
+      fiat: 'CNY',
+      tradeType: 'SELL',
+      price,
+    }),
+  });
+};
+
 export const forceRefreshPrice = async (): Promise<{ price: number, updatedAt: string }> => {
   return request<{ price: number, updatedAt: string }>('/c2c/force-refresh?asset=USDT&fiat=CNY&tradeType=SELL');
 };

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { getServerPrice, forceRefreshPrice } from '../lib/api';
+import { getServerPrice, getC2CList, reportPrice } from '../lib/api';
 import { request } from '../lib/http';
 import { CalculationHistory } from '@c2c/shared';
 import { useAuth } from './AuthContext';
@@ -66,14 +66,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, fetchHistory]);
 
+  // Fetch from Binance (Client side) and report to Server
+  const fetchFromBinanceAndReport = async () => {
+    try {
+      const res = await getC2CList();
+      if (res.data && res.data.length > 0) {
+        const bestPrice = res.data.reduce((max: number, item: any) => {
+          return Math.max(max, Number(item.adv.price));
+        }, 0);
+        
+        // Report to server
+        const reportRes = await reportPrice(bestPrice);
+        return reportRes;
+      }
+    } catch (error) {
+      console.error('Failed to fetch from Binance client-side:', error);
+    }
+    return null;
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getServerPrice();
-      if (res && res.price) {
-        setUsdtPrice(res.price);
-        setLastUpdated(new Date(res.updatedAt));
+      // 1. Try to get cached price from server
+      try {
+        const res = await getServerPrice();
+        // Server will return updated price if cache is valid (within 20 mins)
+        // If server cache is expired, server logic might try to fetch (and fail due to WAF),
+        // then return expired price.
+        // We need to check if the price is "fresh enough" based on updatedAt.
+        
+        if (res && res.price) {
+           const updatedAt = new Date(res.updatedAt).getTime();
+           const now = Date.now();
+           const isFresh = (now - updatedAt) < 20 * 60 * 1000; // 20 mins
+
+           if (isFresh) {
+              setUsdtPrice(res.price);
+              setLastUpdated(new Date(res.updatedAt));
+              return; // Cache is good, we are done
+           }
+        }
+      } catch (e) {
+         console.warn('Server fetch failed, falling back to client fetch', e);
       }
+
+      // 2. If server cache is stale or server fetch failed, fetch from client
+      const freshData = await fetchFromBinanceAndReport();
+      if (freshData) {
+        setUsdtPrice(freshData.price);
+        setLastUpdated(new Date(freshData.updatedAt));
+      }
+
     } catch (error) {
       console.error('Failed to fetch C2C price', error);
     } finally {
@@ -84,10 +128,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const forceRefresh = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await forceRefreshPrice();
-      if (res && res.price) {
-        setUsdtPrice(res.price);
-        setLastUpdated(new Date(res.updatedAt));
+      // Direct client fetch and report
+      const freshData = await fetchFromBinanceAndReport();
+      if (freshData) {
+        setUsdtPrice(freshData.price);
+        setLastUpdated(new Date(freshData.updatedAt));
       }
     } catch (error) {
       console.error('Failed to force refresh C2C price', error);

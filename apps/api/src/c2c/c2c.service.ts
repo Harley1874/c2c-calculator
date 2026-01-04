@@ -39,7 +39,7 @@ export class C2CService {
     this.logger.log(`Fetching fresh price for ${asset}/${fiat} ${tradeType}`);
     try {
       const bestPrice = await this.fetchFromBinance(asset, fiat, tradeType);
-
+      
       // 3. Save to database
       const savedPrice = await this.prisma.c2CPrice.create({
         data: {
@@ -50,27 +50,28 @@ export class C2CService {
         },
       });
 
-      return {
+      return { 
         price: bestPrice,
         updatedAt: savedPrice.createdAt,
       };
     } catch (error) {
-      this.logger.error('Failed to fetch price from Binance', error);
+      this.logger.error(`Error in getPrice fetching: ${error.message}`, error.stack);
+      
       // Fallback to latest available price even if expired?
       // For now, re-throw or return 0
       const latest = await this.prisma.c2CPrice.findFirst({
         where: { asset, fiat, tradeType },
         orderBy: { createdAt: 'desc' },
       });
-
+      
       if (latest) {
         this.logger.warn('Returning expired price due to fetch error');
-        return {
+        return { 
           price: Number(latest.price),
           updatedAt: latest.createdAt,
         };
       }
-
+      
       throw error;
     }
   }
@@ -97,6 +98,23 @@ export class C2CService {
       this.logger.error(`Force refresh failed for ${asset}/${fiat} ${tradeType}`, error);
       throw error;
     }
+  }
+
+  async saveReportedPrice(asset: string, fiat: string, tradeType: string, price: number) {
+    this.logger.log(`Saving reported price for ${asset}/${fiat} ${tradeType}: ${price}`);
+    const savedPrice = await this.prisma.c2CPrice.create({
+      data: {
+        asset,
+        fiat,
+        tradeType,
+        price: new Prisma.Decimal(price),
+      },
+    });
+
+    return { 
+      price: price,
+      updatedAt: savedPrice.createdAt,
+    };
   }
 
   private async fetchFromBinance(asset: string, fiat: string, tradeType: string): Promise<number> {

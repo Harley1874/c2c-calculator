@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Logger } from '@nestjs/common';
 import { C2CService } from './c2c.service';
 
 @Controller('c2c')
@@ -25,6 +25,12 @@ export class C2CController {
   ) {
     this.logger.log(`Received force-refresh request for ${asset}/${fiat} ${tradeType}`);
     return this.c2cService.forceRefresh(asset, fiat, tradeType);
+  }
+
+  @Post('report')
+  async reportPrice(@Body() body: { asset: string; fiat: string; tradeType: string; price: number }) {
+    this.logger.log(`Received price report: ${JSON.stringify(body)}`);
+    return this.c2cService.saveReportedPrice(body.asset, body.fiat, body.tradeType, body.price);
   }
 }
 
