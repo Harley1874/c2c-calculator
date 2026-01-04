@@ -9,6 +9,7 @@
     "desktop": "bun run --filter c2c-calculator tauri dev",
     "desktop:web": "bun run --filter c2c-calculator dev",
     "api": "bun run --filter api dev",
+    "deploy:api": "docker-compose up -d --build",
     "build:desktop": "bun run --filter @c2c/shared build && bun run --filter c2c-calculator build && bun run --filter c2c-calculator tauri build"
   },
   "devDependencies": {
