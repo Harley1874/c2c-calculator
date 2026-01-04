@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { getC2CList } from '../lib/api';
+import { request } from '../lib/http';
 import { CalculationHistory } from '@c2c/shared';
 import { useAuth } from './AuthContext';
 
 export type { CalculationHistory };
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface AppContextType {
   usdtPrice: number | null;
@@ -37,22 +36,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchHistory = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/records`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const formatted: CalculationHistory[] = data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          timestamp: new Date(item.createdAt).getTime(),
-          price: Number(item.price),
-          amount: Number(item.amount),
-          total: Number(item.total),
-          isFavorite: item.isFavorite,
-        }));
-        setHistory(formatted);
-      }
+      const data = await request<any[]>('/records');
+      const formatted: CalculationHistory[] = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        timestamp: new Date(item.createdAt).getTime(),
+        price: Number(item.price),
+        amount: Number(item.amount),
+        total: Number(item.total),
+        isFavorite: item.isFavorite,
+      }));
+      setHistory(formatted);
     } catch (error) {
       console.error('Failed to fetch history:', error);
     }
@@ -109,12 +103,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const total = parseFloat((val * price).toFixed(2));
 
     try {
-      const res = await fetch(`${API_URL}/records`, {
+      await request('/records', {
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           amount: val.toString(),
           price: price.toString(),
@@ -123,10 +113,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      if (res.ok) {
-        await fetchHistory();
-        return true;
-      }
+      await fetchHistory();
+      return true;
     } catch (error) {
       console.error('Failed to save record:', error);
     }
@@ -138,13 +126,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated) return;
     
     try {
-      const res = await fetch(`${API_URL}/records`, { 
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setHistory([]);
-      }
+      await request('/records', { method: 'DELETE' });
+      setHistory([]);
     } catch (error) {
       console.error('Failed to clear history:', error);
     }
@@ -153,13 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteItem = async (id: string) => {
     if (!isAuthenticated) return;
     try {
-      const res = await fetch(`${API_URL}/records/${id}`, { 
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setHistory(prev => prev.filter(item => item.id !== id));
-      }
+      await request(`/records/${id}`, { method: 'DELETE' });
+      setHistory(prev => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error('Failed to delete item:', error);
     }
@@ -168,15 +146,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toggleFavorite = async (id: string) => {
     if (!isAuthenticated) return;
     try {
-      const res = await fetch(`${API_URL}/records/${id}/favorite`, { 
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setHistory(prev => prev.map(item => 
-          item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-        ));
-      }
+      await request(`/records/${id}/favorite`, { method: 'PATCH' });
+      setHistory(prev => prev.map(item => 
+        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+      ));
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
     }

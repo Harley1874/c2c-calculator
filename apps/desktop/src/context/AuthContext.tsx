@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { LoginDto, RegisterDto, AuthResponse } from '@c2c/shared';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { request } from '../lib/http';
 
 interface AuthContextType {
   user: AuthResponse['user'] | null;
@@ -27,20 +26,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (data: LoginDto) => {
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const result = await request<AuthResponse>('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const result: AuthResponse = await res.json();
-        setToken(result.access_token);
-        setUser(result.user);
-        localStorage.setItem('auth_token', result.access_token);
-        localStorage.setItem('auth_user', JSON.stringify(result.user));
-        setShowLoginModal(false);
-        return true;
-      }
+      
+      setToken(result.access_token);
+      setUser(result.user);
+      localStorage.setItem('auth_token', result.access_token);
+      localStorage.setItem('auth_user', JSON.stringify(result.user));
+      setShowLoginModal(false);
+      return true;
     } catch (e) {
       console.error(e);
     }
@@ -49,20 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: RegisterDto) => {
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
+      const result = await request<AuthResponse>('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const result: AuthResponse = await res.json();
-        setToken(result.access_token);
-        setUser(result.user);
-        localStorage.setItem('auth_token', result.access_token);
-        localStorage.setItem('auth_user', JSON.stringify(result.user));
-        setShowLoginModal(false);
-        return true;
-      }
+      
+      setToken(result.access_token);
+      setUser(result.user);
+      localStorage.setItem('auth_token', result.access_token);
+      localStorage.setItem('auth_user', JSON.stringify(result.user));
+      setShowLoginModal(false);
+      return true;
     } catch (e) {
       console.error(e);
     }
