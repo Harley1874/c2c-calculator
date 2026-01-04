@@ -18,7 +18,7 @@ services:
     ports:
       - "${DB_PORT:-3306}:3306" # 映射到主机，方便 Navicat 连接 (生产环境建议改为 127.0.0.1:3306 或不映射)
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql
     networks:
       - c2c-network
     healthcheck:
@@ -50,8 +50,8 @@ services:
     networks:
       - c2c-network
 
-volumes:
-  mysql_data:
+# volumes:
+#   mysql_data:
 
 networks:
   c2c-network:
