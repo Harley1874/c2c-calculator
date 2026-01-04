@@ -4,6 +4,8 @@ node_modules/
 # OS specific files
 .DS_Store
 Thumbs.db
+mysql_data/
+logs/
 
 # Environment variables
 .env
