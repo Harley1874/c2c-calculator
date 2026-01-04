@@ -30,3 +30,14 @@ model Record {
   updatedAt DateTime @updatedAt
   @@index([userId])
 }
+
+model C2CPrice {
+  id        String   @id @default(uuid())
+  asset     String   // e.g., USDT
+  fiat      String   // e.g., CNY
+  tradeType String   // e.g., SELL
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  @@index([asset, fiat, tradeType, createdAt])
+}

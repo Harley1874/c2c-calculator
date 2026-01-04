@@ -13,6 +13,7 @@ export default function CalculatorPage() {
     loading,
     lastUpdated,
     fetchData,
+    forceRefresh,
     getActivePrice,
     saveHistoryRecord,
   } = useApp();
@@ -59,16 +60,28 @@ export default function CalculatorPage() {
           <h2 className="text-3xl font-bold mb-2">汇率计算</h2>
           <p className="text-neutral-500">实时拉取C2C价格进行计算</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchData}
-          loading={loading}
-          className="gap-2"
-        >
-          {!loading && <RefreshCw className="w-4 h-4" />}
-          刷新汇率
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchData}
+            loading={loading}
+            className="gap-2"
+          >
+            {!loading && <RefreshCw className="w-4 h-4" />}
+            刷新汇率
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={forceRefresh}
+            loading={loading}
+            className="gap-2 text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border-orange-200 hover:bg-orange-100"
+          >
+            {!loading && <RefreshCw className="w-4 h-4" />}
+            强制刷新
+          </Button>
+        </div>
       </div>
 
       {/* Price Card */}
@@ -114,8 +127,9 @@ export default function CalculatorPage() {
           </div>
 
           {lastUpdated && (
-            <div className="text-xs text-neutral-400 pb-2">
-              更新时间: {lastUpdated.toLocaleTimeString()}
+            <div className="text-xs text-neutral-400 pb-2 flex flex-col items-end">
+               <span>服务端更新时间</span>
+               <span className="font-mono">{lastUpdated.toLocaleString()}</span>
             </div>
           )}
         </div>

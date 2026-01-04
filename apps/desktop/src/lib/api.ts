@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { request } from './http';
 
 export interface C2CResponse {
   code: string;
@@ -54,4 +55,12 @@ export const getC2CList = async (): Promise<C2CResponse> => {
 
   const response = await invoke<C2CResponse>('fetch_c2c_list', { payload: params });
   return response;
+};
+
+export const getServerPrice = async (): Promise<{ price: number, updatedAt: string }> => {
+  return request<{ price: number, updatedAt: string }>('/c2c/price?asset=USDT&fiat=CNY&tradeType=SELL');
+};
+
+export const forceRefreshPrice = async (): Promise<{ price: number, updatedAt: string }> => {
+  return request<{ price: number, updatedAt: string }>('/c2c/force-refresh?asset=USDT&fiat=CNY&tradeType=SELL');
 };

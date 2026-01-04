@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { getC2CList } from '../lib/api';
+import { getServerPrice, forceRefreshPrice } from '../lib/api';
 import { request } from '../lib/http';
 import { CalculationHistory } from '@c2c/shared';
 import { useAuth } from './AuthContext';
@@ -15,6 +15,7 @@ interface AppContextType {
   historyLoading: boolean;
   lastUpdated: Date | null;
   fetchData: () => Promise<void>;
+  forceRefresh: () => Promise<void>;
   saveHistoryRecord: (amount: string, name: string) => Promise<boolean>;
   clearHistory: () => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
@@ -68,16 +69,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getC2CList();
-      if (res.data && res.data.length > 0) {
-        const bestPrice = res.data.reduce((max: number, item: any) => {
-          return Math.max(max, Number(item.adv.price));
-        }, 0);
-        setUsdtPrice(bestPrice);
-        setLastUpdated(new Date());
+      const res = await getServerPrice();
+      if (res && res.price) {
+        setUsdtPrice(res.price);
+        setLastUpdated(new Date(res.updatedAt));
       }
     } catch (error) {
-      console.error('Failed to fetch C2C list', error);
+      console.error('Failed to fetch C2C price', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const forceRefresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await forceRefreshPrice();
+      if (res && res.price) {
+        setUsdtPrice(res.price);
+        setLastUpdated(new Date(res.updatedAt));
+      }
+    } catch (error) {
+      console.error('Failed to force refresh C2C price', error);
     } finally {
       setLoading(false);
     }
@@ -170,6 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       historyLoading,
       lastUpdated,
       fetchData,
+      forceRefresh,
       saveHistoryRecord,
       clearHistory,
       deleteItem,

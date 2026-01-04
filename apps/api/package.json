@@ -16,18 +16,19 @@
     "prisma": "prisma"
   },
   "dependencies": {
+    "@c2c/shared": "workspace:*",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
-    "@nestjs/platform-express": "^10.0.0",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.0",
+    "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "5.10.0",
+    "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1",
-    "@c2c/shared": "workspace:*"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
