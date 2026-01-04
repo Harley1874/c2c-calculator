@@ -12,7 +12,7 @@ export class C2CService {
   async getPrice(asset: string, fiat: string, tradeType: string) {
     // 1. Check cache (database)
     const validTime = new Date(Date.now() - 20 * 60 * 1000); // 20 minutes
-    
+
     const cachedPrice = await this.prisma.c2CPrice.findFirst({
       where: {
         asset,
@@ -29,9 +29,9 @@ export class C2CService {
 
     if (cachedPrice) {
       this.logger.log(`Using cached price for ${asset}/${fiat} ${tradeType}: ${cachedPrice.price}`);
-      return { 
+      return {
         price: Number(cachedPrice.price),
-        updatedAt: cachedPrice.createdAt
+        updatedAt: cachedPrice.createdAt,
       };
     }
 
@@ -39,7 +39,7 @@ export class C2CService {
     this.logger.log(`Fetching fresh price for ${asset}/${fiat} ${tradeType}`);
     try {
       const bestPrice = await this.fetchFromBinance(asset, fiat, tradeType);
-      
+
       // 3. Save to database
       const savedPrice = await this.prisma.c2CPrice.create({
         data: {
@@ -50,48 +50,53 @@ export class C2CService {
         },
       });
 
-      return { 
+      return {
         price: bestPrice,
-        updatedAt: savedPrice.createdAt
+        updatedAt: savedPrice.createdAt,
       };
     } catch (error) {
       this.logger.error('Failed to fetch price from Binance', error);
       // Fallback to latest available price even if expired?
       // For now, re-throw or return 0
       const latest = await this.prisma.c2CPrice.findFirst({
-         where: { asset, fiat, tradeType },
-         orderBy: { createdAt: 'desc' }
+        where: { asset, fiat, tradeType },
+        orderBy: { createdAt: 'desc' },
       });
-      
+
       if (latest) {
-          this.logger.warn('Returning expired price due to fetch error');
-          return { 
-            price: Number(latest.price),
-            updatedAt: latest.createdAt
-          };
+        this.logger.warn('Returning expired price due to fetch error');
+        return {
+          price: Number(latest.price),
+          updatedAt: latest.createdAt,
+        };
       }
-      
+
       throw error;
     }
   }
 
   async forceRefresh(asset: string, fiat: string, tradeType: string) {
     this.logger.log(`Force refreshing price for ${asset}/${fiat} ${tradeType}`);
-    const bestPrice = await this.fetchFromBinance(asset, fiat, tradeType);
-    
-    const savedPrice = await this.prisma.c2CPrice.create({
-      data: {
-        asset,
-        fiat,
-        tradeType,
-        price: new Prisma.Decimal(bestPrice),
-      },
-    });
+    try {
+      const bestPrice = await this.fetchFromBinance(asset, fiat, tradeType);
 
-    return { 
-      price: bestPrice,
-      updatedAt: savedPrice.createdAt
-    };
+      const savedPrice = await this.prisma.c2CPrice.create({
+        data: {
+          asset,
+          fiat,
+          tradeType,
+          price: new Prisma.Decimal(bestPrice),
+        },
+      });
+
+      return {
+        price: bestPrice,
+        updatedAt: savedPrice.createdAt,
+      };
+    } catch (error) {
+      this.logger.error(`Force refresh failed for ${asset}/${fiat} ${tradeType}`, error);
+      throw error;
+    }
   }
 
   private async fetchFromBinance(asset: string, fiat: string, tradeType: string): Promise<number> {
@@ -116,7 +121,15 @@ export class C2CService {
 
     const response = await axios.post(
       'https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search',
-      payload
+      payload,
+      {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Content-Type': 'application/json',
+          'Client-Type': 'web',
+        },
+      }
     );
 
     const data = response.data;
@@ -126,12 +139,12 @@ export class C2CService {
 
     // Calculate best price
     // If tradeType is SELL (we are selling), we look for ads where advertisers are BUYING.
-    // In Binance API, tradeType 'SELL' means ads where the advertiser is buying from us? 
+    // In Binance API, tradeType 'SELL' means ads where the advertiser is buying from us?
     // Wait, let's verify.
     // In the client code, it uses `tradeType: 'SELL'`.
     // And it finds `Math.max`.
     // So we are looking for the highest price.
-    
+
     const ads = data.data as any[];
     if (ads.length === 0) return 0;
 
@@ -143,4 +156,3 @@ export class C2CService {
     return bestPrice;
   }
 }
-
