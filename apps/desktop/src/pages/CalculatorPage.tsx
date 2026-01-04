@@ -57,7 +57,7 @@ export default function CalculatorPage() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-bold mb-2">汇率计算</h2>
-          <p className="text-neutral-500">实时拉取币安C2C价格进行计算</p>
+          <p className="text-neutral-500">实时拉取C2C价格进行计算</p>
         </div>
         <Button
           variant="outline"

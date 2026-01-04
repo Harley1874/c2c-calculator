@@ -68,7 +68,7 @@ export default function MainLayout() {
 
         <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
           {isAuthenticated && user ? (
-            <div className="flex items-center justify-between mb-4 px-2">
+            <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2 overflow-hidden">
                 <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 shrink-0">
                   <UserIcon className="w-4 h-4" />
@@ -97,7 +97,6 @@ export default function MainLayout() {
               登录 / 注册
             </Button>
           )}
-          <div className="text-xs text-neutral-500 text-center">Based on Binance C2C</div>
         </div>
       </div>
 
